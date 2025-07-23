@@ -42,15 +42,21 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v3
 
-    - name: Run bandit SAST scan
+    - name: Set up Python
+      uses: actions/setup-python@v3
+      with:
+        python-version: '3.9'
+
+    - name: Install dependencies
       run: |
-        pip install bandit
-        bandit -r app/ -f sarif -o bandit-report.sarif
+        python -m pip install --upgrade pip
+        pip install bandit safety
+
+    - name: Run bandit SAST scan
+      run: python -m bandit -r app/ -f sarif -o bandit-report.sarif
 
     - name: Run safety dependency scan
-      run: |
-        pip install safety
-        safety check -r requirements.txt --sarif -o safety-report.sarif
+      run: safety check -r requirements.txt --sarif -o safety-report.sarif
 
     - name: Run Gitleaks secret scan
       uses: gitleaks/gitleaks-action@v2
