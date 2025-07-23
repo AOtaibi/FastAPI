@@ -45,12 +45,27 @@ jobs:
     - name: Run bandit SAST scan
       run: |
         pip install bandit
-        bandit -r app/
+        bandit -r app/ -f sarif -o bandit-report.sarif
 
     - name: Run safety dependency scan
       run: |
         pip install safety
-        safety check -r requirements.txt
+        safety check -r requirements.txt --sarif -o safety-report.sarif
+
+    - name: Run Gitleaks secret scan
+      uses: gitleaks/gitleaks-action@v2
+      with:
+        config-path: .gitleaks.toml
+        report-format: sarif
+        report-path: gitleaks-report.sarif
+
+    - name: Upload security reports
+      uses: github/codeql-action/upload-sarif@v2
+      with:
+        sarif_file: |
+          bandit-report.sarif
+          safety-report.sarif
+          gitleaks-report.sarif
 
   build-and-scan-image:
     runs-on: ubuntu-latest
@@ -70,8 +85,14 @@ jobs:
       uses: aquasecurity/trivy-action@master
       with:
         image-ref: 'fastapi-test-app:latest'
-        format: 'table'
+        format: 'sarif'
+        output: 'trivy-results.sarif'
         exit-code: '1'
         ignore-unfixed: true
         vuln-type: 'os,library'
         severity: 'CRITICAL,HIGH'
+
+    - name: Upload Trivy scan results
+      uses: github/codeql-action/upload-sarif@v2
+      with:
+        sarif_file: 'trivy-results.sarif'
