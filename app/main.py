@@ -5,12 +5,13 @@ from fastapi import Depends, FastAPI, HTTPException
 from sqlalchemy.orm import Session
 
 from . import crud, models, schemas
-from .database import SessionLocal, engine
-
-models.Base.metadata.create_all(bind=engine)
+from .database import SessionLocal, engine, Base
 
 app = FastAPI()
 
+@app.on_event("startup")
+def on_startup():
+    Base.metadata.create_all(bind=engine)
 
 # Dependency
 def get_db():
