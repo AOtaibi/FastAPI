@@ -1,23 +1,18 @@
 
-# Stage 1: Builder - for the final application image
-FROM python:3.9-slim-buster as builder
-
-WORKDIR /workspace
-
+# Stage 1: Application Image
+FROM python:3.9-slim-buster as app-image
+WORKDIR /app
 COPY requirements.txt .
-
 RUN pip install --no-cache-dir -r requirements.txt
-
 COPY . .
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
 
-# Stage 2: Scanner - for running security scans
+# Stage 2: Scanner Image
 FROM python:3.9-slim-buster as scanner
-
 WORKDIR /workspace
 
-COPY requirements.txt .
-COPY app/ app/
+# Install tools with correct extras for SARIF support
+RUN pip install --upgrade pip &&     pip install "bandit[sarif]" "safety"
 
-RUN pip install bandit safety
-
-CMD ["/bin/bash"]
+# Copy source code to be scanned
+COPY . .
