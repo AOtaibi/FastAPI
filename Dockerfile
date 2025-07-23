@@ -11,8 +11,9 @@ CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload
 FROM python:3.9-slim-buster as scanner
 WORKDIR /workspace
 
-# Install tools with correct extras for SARIF support
-RUN pip install --upgrade pip &&     pip install "bandit[sarif]" "safety"
+# Install specific, modern versions of security tools with SARIF support
+RUN pip install --upgrade pip && \
+    pip install "bandit[sarif]>=1.7.0" "safety>=2.3.5"
 
 # Copy source code to be scanned
 COPY . .
