@@ -47,16 +47,20 @@ jobs:
       with:
         python-version: '3.9'
 
-    - name: Install dependencies
+    - name: Install and verify security tools
       run: |
         python -m pip install --upgrade pip
         pip install bandit safety
+        echo "--- Bandit Version Info ---"
+        pip show bandit
+        echo "--- Safety Version Info ---"
+        pip show safety
 
     - name: Run bandit SAST scan
       run: python -m bandit -r app/ -f sarif -o bandit-report.sarif
 
     - name: Run safety dependency scan
-      run: safety check -r requirements.txt --sarif -o safety-report.sarif
+      run: python -m safety check -r requirements.txt --sarif -o safety-report.sarif
 
     - name: Run Gitleaks secret scan
       uses: gitleaks/gitleaks-action@v2
