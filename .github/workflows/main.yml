@@ -42,19 +42,13 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v3
 
-    - name: Set up Python
-      uses: actions/setup-python@v3
-      with:
-        python-version: '3.9'
+    - name: Build scanner image
+      run: docker build --target scanner -t scanner-image .
 
-    - name: Install and run security tools with pipx
+    - name: Run security scans in Docker
       run: |
-        pip install pipx
-        pipx ensurepath
-        pipx install bandit
-        pipx install safety
-        pipx run bandit -r app/ -f sarif -o bandit-report.sarif
-        pipx run safety check -r requirements.txt --sarif -o safety-report.sarif
+        docker run --rm -v $(pwd):/scan-results scanner-image /bin/bash -c "bandit -r /workspace/app -f sarif -o /scan-results/bandit-report.sarif"
+        docker run --rm -v $(pwd):/scan-results scanner-image /bin/bash -c "safety check -r /workspace/requirements.txt --sarif -o /scan-results/safety-report.sarif"
 
     - name: Run Gitleaks secret scan
       uses: gitleaks/gitleaks-action@v2

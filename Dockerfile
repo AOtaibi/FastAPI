@@ -1,5 +1,6 @@
 
-FROM python:3.9-slim-buster
+# Stage 1: Builder - for the final application image
+FROM python:3.9-slim-buster as builder
 
 WORKDIR /workspace
 
@@ -9,4 +10,14 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+# Stage 2: Scanner - for running security scans
+FROM python:3.9-slim-buster as scanner
+
+WORKDIR /workspace
+
+COPY requirements.txt .
+COPY app/ app/
+
+RUN pip install bandit safety
+
+CMD ["/bin/bash"]
