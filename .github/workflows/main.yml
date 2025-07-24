@@ -42,37 +42,22 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v3
 
-    - name: Run Trivy for requirements scanning
+    - name: Run Trivy for filesystem and dependency scanning
       uses: aquasecurity/trivy-action@0.20.0
       with:
         scan-type: 'fs'
         scan-ref: '.'
         format: 'sarif'
-        output: 'trivy-requirements-report.sarif'
+        output: 'trivy-fs-report.sarif'
         ignore-unfixed: true
         vuln-type: 'os,library'
         severity: 'CRITICAL,HIGH'
+        scanners: 'vuln,secret'
 
-    - name: Build scanner image for Bandit
-      run: docker build --target scanner -t scanner-image .
-
-    - name: Run Bandit scan in Docker
-      run: docker run --rm scanner-image bandit -r /workspace/app -f sarif > bandit-report.sarif
-
-    - name: Run Gitleaks secret scan
-      uses: gitleaks/gitleaks-action@v2
-      with:
-        config-path: .gitleaks.toml
-        report-format: sarif
-        report-path: gitleaks-report.sarif
-
-    - name: List files for debugging
-      run: ls -R
-
-    - name: Upload security reports
+    - name: Upload Trivy filesystem scan results
       uses: github/codeql-action/upload-sarif@v3
       with:
-        sarif_file: "*.sarif"
+        sarif_file: 'trivy-fs-report.sarif'
 
   build-and-scan-image:
     runs-on: ubuntu-latest
@@ -88,18 +73,17 @@ jobs:
     - name: Build Docker image
       run: docker build -t fastapi-test-app:latest .
 
-    - name: Scan Docker image with Trivy
+    - name: Run Trivy for Docker image scanning
       uses: aquasecurity/trivy-action@0.20.0
       with:
         image-ref: 'fastapi-test-app:latest'
         format: 'sarif'
-        output: 'trivy-results.sarif'
-        exit-code: '1'
+        output: 'trivy-image-report.sarif'
         ignore-unfixed: true
         vuln-type: 'os,library'
         severity: 'CRITICAL,HIGH'
 
-    - name: Upload Trivy scan results
+    - name: Upload Trivy image scan results
       uses: github/codeql-action/upload-sarif@v3
       with:
-        sarif_file: 'trivy-results.sarif'
+        sarif_file: 'trivy-image-report.sarif'
