@@ -43,7 +43,7 @@ jobs:
       uses: actions/checkout@v3
 
     - name: Run Trivy for requirements scanning
-      uses: aquasecurity/trivy-action@master
+      uses: aquasecurity/trivy-action@0.20.0
       with:
         scan-type: 'fs'
         scan-ref: '.'
@@ -52,14 +52,12 @@ jobs:
         ignore-unfixed: true
         vuln-type: 'os,library'
         severity: 'CRITICAL,HIGH'
-        continue-on-error: true
 
     - name: Build scanner image for Bandit
       run: docker build --target scanner -t scanner-image .
 
     - name: Run Bandit scan in Docker
       run: docker run --rm scanner-image bandit -r /workspace/app -f sarif > bandit-report.sarif
-      continue-on-error: true
 
     - name: Run Gitleaks secret scan
       uses: gitleaks/gitleaks-action@v2
@@ -67,7 +65,6 @@ jobs:
         config-path: .gitleaks.toml
         report-format: sarif
         report-path: gitleaks-report.sarif
-      continue-on-error: true
 
     - name: List files for debugging
       run: ls -R
@@ -75,10 +72,7 @@ jobs:
     - name: Upload security reports
       uses: github/codeql-action/upload-sarif@v3
       with:
-        sarif_file: |
-          trivy-requirements-report.sarif
-          bandit-report.sarif
-          gitleaks-report.sarif
+        sarif_file: "*.sarif"
 
   build-and-scan-image:
     runs-on: ubuntu-latest
@@ -95,7 +89,7 @@ jobs:
       run: docker build -t fastapi-test-app:latest .
 
     - name: Scan Docker image with Trivy
-      uses: aquasecurity/trivy-action@master
+      uses: aquasecurity/trivy-action@0.20.0
       with:
         image-ref: 'fastapi-test-app:latest'
         format: 'sarif'
