@@ -21,7 +21,7 @@ WORKDIR /app
 
 COPY . .
 
-RUN pip install ruff pytest
+RUN pip install ruff pytest httpx
 
 # Stage 4: Final - The final, slim, production-ready image
 FROM base as final
