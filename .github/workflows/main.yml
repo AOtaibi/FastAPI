@@ -66,8 +66,11 @@ jobs:
         report-format: sarif
         report-path: gitleaks-report.sarif
 
+    - name: List files for debugging
+      run: ls -R
+
     - name: Upload security reports
-      uses: github/codeql-action/upload-sarif@v2
+      uses: github/codeql-action/upload-sarif@v3
       with:
         sarif_file: |
           trivy-requirements-report.sarif
@@ -100,6 +103,6 @@ jobs:
         severity: 'CRITICAL,HIGH'
 
     - name: Upload Trivy scan results
-      uses: github/codeql-action/upload-sarif@v2
+      uses: github/codeql-action/upload-sarif@v3
       with:
         sarif_file: 'trivy-results.sarif'
