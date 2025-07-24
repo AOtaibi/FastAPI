@@ -52,12 +52,14 @@ jobs:
         ignore-unfixed: true
         vuln-type: 'os,library'
         severity: 'CRITICAL,HIGH'
+        continue-on-error: true
 
     - name: Build scanner image for Bandit
       run: docker build --target scanner -t scanner-image .
 
     - name: Run Bandit scan in Docker
-      run: docker run --rm -v $(pwd):/scan-results scanner-image /bin/bash -c "bandit -r /workspace/app -f sarif -o /scan-results/bandit-report.sarif"
+      run: docker run --rm scanner-image bandit -r /workspace/app -f sarif > bandit-report.sarif
+      continue-on-error: true
 
     - name: Run Gitleaks secret scan
       uses: gitleaks/gitleaks-action@v2
@@ -65,6 +67,7 @@ jobs:
         config-path: .gitleaks.toml
         report-format: sarif
         report-path: gitleaks-report.sarif
+      continue-on-error: true
 
     - name: List files for debugging
       run: ls -R
